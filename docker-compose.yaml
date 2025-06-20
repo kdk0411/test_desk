@@ -1,0 +1,83 @@
+services:
+  # -------------------------
+  # RustDesk Server (hbbs)
+  # -------------------------
+  hbbs:
+    container_name: hbbs
+    image: rustdesk/rustdesk-server:latest
+    command: hbbs
+    environment:
+      - ALWAYS_USE_RELAY=Y
+    volumes:
+      - ./data:/root
+    network_mode: host
+    restart: unless-stopped
+    depends_on:
+      - hbbr
+
+  # -------------------------
+  # RustDesk Relay (hbbr)
+  # -------------------------
+  hbbr:
+    container_name: hbbr
+    image: rustdesk/rustdesk-server:latest
+    command: hbbr
+    volumes:
+      - ./data:/root
+    network_mode: host
+    restart: unless-stopped
+
+  # -------------------------
+  # Prometheus (하드웨어 메트릭 수집)
+  # -------------------------
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring_network
+    restart: unless-stopped
+
+  # -------------------------
+  # Node Exporter (시스템 하드웨어 메트릭)
+  # -------------------------
+  node_exporter:
+    image: prom/node-exporter
+    container_name: node_exporter
+    ports:
+      - "9100:9100"
+    command:
+      - "--path.rootfs=/host"
+    volumes:
+      - "/:/host:ro,rslave"
+    networks:
+      - monitoring_network
+    restart: unless-stopped
+
+  # -------------------------
+  # Grafana (하드웨어 모니터링 대시보드)
+  # -------------------------
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - monitoring_network
+    restart: unless-stopped
+
+networks:
+  monitoring_network:
+    driver: bridge
+
+volumes:
+  grafana_data:
