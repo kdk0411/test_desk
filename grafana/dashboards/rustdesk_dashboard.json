@@ -1,0 +1,19 @@
+{
+    "dashboard": {
+        "id": null,
+        "title": "RustDesk Server Monitor",
+        "tags": [
+            "rustdesk"
+        ],
+        "style": "dark",
+        "timezone": "browser",
+        "panels": [],
+        "time": {
+            "from": "now-1h",
+            "to": "now"
+        },
+        "refresh": "30s",
+        "schemaVersion": 30,
+        "version": 1
+    }
+}

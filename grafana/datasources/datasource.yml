@@ -1,0 +1,28 @@
+apiVersion: 1
+
+datasources:
+  # Prometheus 데이터소스 - 하드웨어 메트릭용
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+    jsonData:
+      timeInterval: "15s"
+      queryTimeout: "60s"
+      httpMethod: "POST"
+
+  # Loki 데이터소스 - 로그 모니터링용
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    editable: true
+    jsonData:
+      maxLines: 1000
+      derivedFields:
+        - datasourceUid: prometheus
+          matcherRegex: "traceID=(\\w+)"
+          name: TraceID
+          url: "$${__value.raw}"

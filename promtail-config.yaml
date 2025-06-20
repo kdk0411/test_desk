@@ -1,0 +1,43 @@
+# Promtail은 RustDesk 서버의 로그를 수집하여 Loki에 전달하는 Log 수집기의 역할을 한다.
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # RustDesk 서버 로그 (제한적)
+  - job_name: rustdesk
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: rustdesk
+          host: rustdesk-server
+          __path__: /var/log/rustdesk/*.log
+          # 반드시 Promtail이 읽을 수 있는 경로를 지정해야 한다.
+          # 이 경로는 docker-compose.yaml 에서 ./logs:/var/log/rustdesk 로 마운트된다.
+
+  # 시스템 로그 (추가)
+  - job_name: system
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: system
+          host: rustdesk-server
+          __path__: /var/log/syslog
+
+  # Docker 컨테이너 로그 (추가)
+  - job_name: docker
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: docker
+          host: rustdesk-server
+          __path__: /var/lib/docker/containers/*/*.log
